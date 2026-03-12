@@ -5,14 +5,13 @@ const runtimeConfig = window.__QADAM_CONFIG__ || {};
 const SHEET_URL = runtimeConfig.sheetUrl || DEFAULT_SHEET_URL;
 
 const WHATSAPP_AGENTS = (runtimeConfig.whatsappAgents || [
-  { label: "Message Agent A", phone: "971501112233" },
-  { label: "Message Agent B", phone: "971509998877" },
+  { label: "Message Agent A", phone: "923398619007" },
+  { label: "Message Agent B", phone: "923398968007" },
 ]).filter((agent) => agent?.phone && agent?.label);
 
 const STATUS_MAP = {
   "": "Available",
   pending: "Reserved",
-  completed: "Sold",
   complete: "Sold",
 };
 
@@ -270,7 +269,10 @@ function openPanel(id) {
       <p class="card-price">${escapeHtml(item.publicPrice)}</p>
       <p class="detail-description">${escapeHtml(item.description)}</p>
       <div class="whatsapp-row">
-        ${renderWhatsappButtons(message)}
+        ${WHATSAPP_AGENTS.map(
+          (agent, idx) =>
+            `<a class="cta ${idx === 0 ? "primary" : "secondary"}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${agent.phone}?text=${message}">${agent.label}</a>`,
+        ).join("")}
       </div>
     </div>
   `;

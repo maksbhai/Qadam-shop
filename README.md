@@ -33,4 +33,4 @@ Payment Status mapping:
 
 - empty → Available
 - Pending → Reserved
-- Completed → Sold
+- Complete → Sold
