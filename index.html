@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Qadam Privé | Luxury Sneaker Archive</title>
+    <meta
+      name="description"
+      content="Luxury sneaker storefront featuring authenticated inventory, premium curation, and direct WhatsApp concierge checkout."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="ambient-glow ambient-glow--1" aria-hidden="true"></div>
+    <div class="ambient-glow ambient-glow--2" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <p class="brand-eyebrow">Qadam Privé</p>
+      <h1>Curated Sneaker Vault</h1>
+      <p class="lead">
+        Luxury resale inventory synced live from our internal sheet. Shop available pairs instantly via concierge.
+      </p>
+    </header>
+
+    <section class="featured" aria-labelledby="featured-title">
+      <div class="section-title-wrap">
+        <h2 id="featured-title">Featured drops</h2>
+      </div>
+      <div id="featuredRail" class="featured-rail" role="list"></div>
+    </section>
+
+    <section class="trust-strip" aria-label="Store trust indicators">
+      <article>
+        <p class="trust-value">100%</p>
+        <p class="trust-label">Authenticity guaranteed</p>
+      </article>
+      <article>
+        <p class="trust-value">2 min</p>
+        <p class="trust-label">Average WhatsApp response</p>
+      </article>
+      <article>
+        <p class="trust-value">Live</p>
+        <p class="trust-label">Inventory synced in real-time</p>
+      </article>
+    </section>
+
+    <section class="controls" aria-label="Filter and search">
+      <label class="search-wrap" for="searchInput">
+        <span class="sr-only">Search products</span>
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search by name, condition, or size"
+          autocomplete="off"
+        />
+      </label>
+      <div id="chipBar" class="chip-bar" role="toolbar" aria-label="Filter by availability"></div>
+    </section>
+
+    <main>
+      <section aria-labelledby="available-title">
+        <div class="section-title-wrap">
+          <h2 id="available-title">Available sneakers</h2>
+          <p id="availableCount" class="section-meta"></p>
+        </div>
+        <div id="availableGrid" class="product-grid"></div>
+      </section>
+
+      <section aria-labelledby="archive-title" class="archive-section">
+        <div class="section-title-wrap">
+          <h2 id="archive-title">Reserved & sold archive</h2>
+          <p id="archiveCount" class="section-meta"></p>
+        </div>
+        <div id="archiveGrid" class="product-grid archive-grid"></div>
+      </section>
+    </main>
+
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+      <div id="productPanel" class="product-panel" role="dialog" aria-modal="true" aria-live="polite"></div>
+    </div>
+
+    <template id="cardSkeletonTemplate">
+      <article class="card skeleton-card">
+        <div class="skeleton-img shimmer"></div>
+        <div class="card-content">
+          <div class="skeleton-line shimmer"></div>
+          <div class="skeleton-line shimmer short"></div>
+          <div class="skeleton-line shimmer tiny"></div>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
