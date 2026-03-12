@@ -325,6 +325,10 @@ h1 {
   align-items: end;
 }
 
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 .product-panel {
   width: 100%;
   background: #10131f;
