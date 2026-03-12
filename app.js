@@ -1,10 +1,13 @@
-const SHEET_URL =
+const DEFAULT_SHEET_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZQbxfMT_V4_wHyjn4yOtGPxd4I392sODXGX3KQZFJ2ndSheNkFBrdm6wRdNqWAkYPGtSHMS0Lhp3U/pub?gid=0&single=true&output=csv";
 
-const WHATSAPP_AGENTS = [
-  { label: "Message Agent A", phone: "971501112233" },
-  { label: "Message Agent B", phone: "971509998877" },
-];
+const runtimeConfig = window.__QADAM_CONFIG__ || {};
+const SHEET_URL = runtimeConfig.sheetUrl || DEFAULT_SHEET_URL;
+
+const WHATSAPP_AGENTS = (runtimeConfig.whatsappAgents || [
+  { label: "Message Agent A", phone: "923398619007" },
+  { label: "Message Agent B", phone: "923398968007" },
+]).filter((agent) => agent?.phone && agent?.label);
 
 const STATUS_MAP = {
   "": "Available",
@@ -293,6 +296,17 @@ function renderError(error) {
   dom.availableGrid.innerHTML = `<p class="empty-state">${text}. Please try again later.</p>`;
   dom.archiveGrid.innerHTML = "";
   dom.featuredRail.innerHTML = "";
+}
+
+function renderWhatsappButtons(message) {
+  if (!WHATSAPP_AGENTS.length) {
+    return `<p class="empty-state">WhatsApp agents are not configured yet.</p>`;
+  }
+
+  return WHATSAPP_AGENTS.map(
+    (agent, idx) =>
+      `<a class="cta ${idx === 0 ? "primary" : "secondary"}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${agent.phone}?text=${message}">${escapeHtml(agent.label)}</a>`,
+  ).join("");
 }
 
 function escapeHtml(value) {
