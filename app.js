@@ -12,7 +12,7 @@ const WHATSAPP_AGENTS = (runtimeConfig.whatsappAgents || [
 const STATUS_MAP = {
   "": "Available",
   pending: "Reserved",
-  complete: "Sold",
+  Sold: "Sold",
 };
 
 const dom = {
