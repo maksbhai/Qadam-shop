@@ -319,9 +319,12 @@ select {
 .card-meta { color: var(--muted); margin-top: 0.3rem; font-size: 0.79rem; }
 .card-price { margin-top: 0.48rem; font-weight: 700; font-size: 0.88rem; }
 
-.card--available { box-shadow: 0 0 0 1px rgba(53, 215, 141, 0.14), 0 8px 24px rgba(24, 116, 73, 0.2); }
+.card--available { box-shadow: 0 0 0 1px rgba(53, 215, 141, 0.161), 0 9px 28px rgba(24, 116, 73, 0.23); }
 .card--reserved { filter: saturate(0.86) brightness(0.95); }
-.card--sold { filter: saturate(0.6) brightness(0.86); }
+.card--sold {
+  filter: saturate(0.6) brightness(0.86);
+  box-shadow: 0 0 0 1px rgba(210, 164, 126, 0.196), 0 9px 28px rgba(169, 129, 97, 0.23);
+}
 .card--archive { background: rgba(15, 19, 31, 0.76); }
 
 .badge {
