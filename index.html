@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Qadam Privé | Luxury Sneaker Archive</title>
+    <title>Qadam Privé | Ultra Premium Sneaker Resale</title>
     <meta
       name="description"
-      content="Luxury sneaker storefront featuring authenticated inventory, premium curation, and direct WhatsApp concierge checkout."
+      content="Mobile-first luxury sneaker resale storefront with curated inventory, trusted sold archive, and premium WhatsApp concierge checkout."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,67 +17,88 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="ambient-glow ambient-glow--1" aria-hidden="true"></div>
-    <div class="ambient-glow ambient-glow--2" aria-hidden="true"></div>
+    <div class="ambient-glow ambient-glow--top" aria-hidden="true"></div>
+    <div class="ambient-glow ambient-glow--bottom" aria-hidden="true"></div>
 
-    <header class="site-header">
-      <p class="brand-eyebrow">Qadam Privé</p>
-      <h1>Curated Sneaker Vault</h1>
-      <p class="lead">
-        Luxury resale inventory synced live from our internal sheet. Shop available pairs instantly via concierge.
+    <header class="hero reveal-on-scroll" id="top">
+      <p class="eyebrow">Qadam Privé</p>
+      <h1>Ultra-premium sneaker resale, curated for collectors.</h1>
+      <p class="hero-copy">
+        Discover handpicked pairs from a live inventory feed. Mobile-first, concierge backed, and built for fast secure
+        WhatsApp checkout.
       </p>
+      <div class="hero-actions">
+        <a href="#available-title" class="btn btn-primary">Shop Available</a>
+        <a href="#archive-title" class="btn btn-secondary">View Sold Archive</a>
+      </div>
+      <div id="heroFeature" class="hero-feature"></div>
     </header>
 
-    <section class="featured" aria-labelledby="featured-title">
-      <div class="section-title-wrap">
-        <h2 id="featured-title">Featured drops</h2>
+    <section class="featured reveal-on-scroll" aria-labelledby="featured-title">
+      <div class="section-head">
+        <h2 id="featured-title">Featured Sneakers</h2>
       </div>
       <div id="featuredRail" class="featured-rail" role="list"></div>
     </section>
 
-    <section class="trust-strip" aria-label="Store trust indicators">
-      <article>
-        <p class="trust-value">100%</p>
-        <p class="trust-label">Authenticity guaranteed</p>
-      </article>
-      <article>
-        <p class="trust-value">2 min</p>
-        <p class="trust-label">Average WhatsApp response</p>
-      </article>
-      <article>
-        <p class="trust-value">Live</p>
-        <p class="trust-label">Inventory synced in real-time</p>
-      </article>
-    </section>
-
-    <section class="controls" aria-label="Filter and search">
-      <label class="search-wrap" for="searchInput">
-        <span class="sr-only">Search products</span>
-        <input
-          id="searchInput"
-          type="search"
-          placeholder="Search by name, condition, or size"
-          autocomplete="off"
-        />
+    <section class="controls reveal-on-scroll" aria-label="Search and filters">
+      <label class="search-shell" for="searchInput">
+        <span class="sr-only">Search sneakers</span>
+        <input id="searchInput" type="search" placeholder="Search by name, size, condition" autocomplete="off" />
       </label>
-      <div id="chipBar" class="chip-bar" role="toolbar" aria-label="Filter by availability"></div>
+      <div class="control-row">
+        <div id="statusChips" class="chip-row" role="toolbar" aria-label="Filter by status"></div>
+      </div>
+      <div class="control-row compact-row">
+        <label>
+          <span class="sr-only">Filter by size</span>
+          <select id="sizeFilter"></select>
+        </label>
+        <label>
+          <span class="sr-only">Filter by condition</span>
+          <select id="conditionFilter"></select>
+        </label>
+        <label>
+          <span class="sr-only">Sort sneakers</span>
+          <select id="sortBy"></select>
+        </label>
+      </div>
     </section>
 
     <main>
-      <section aria-labelledby="available-title">
-        <div class="section-title-wrap">
-          <h2 id="available-title">Available sneakers</h2>
+      <section aria-labelledby="available-title" class="reveal-on-scroll">
+        <div class="section-head">
+          <h2 id="available-title">Available Sneakers</h2>
           <p id="availableCount" class="section-meta"></p>
         </div>
         <div id="availableGrid" class="product-grid"></div>
       </section>
 
-      <section aria-labelledby="archive-title" class="archive-section">
-        <div class="section-title-wrap">
-          <h2 id="archive-title">Reserved & sold archive</h2>
+      <section aria-labelledby="archive-title" class="archive reveal-on-scroll">
+        <div class="section-head">
+          <h2 id="archive-title">Reserved & Sold Archive</h2>
           <p id="archiveCount" class="section-meta"></p>
         </div>
-        <div id="archiveGrid" class="product-grid archive-grid"></div>
+        <div id="archiveGrid" class="product-grid"></div>
+      </section>
+
+      <section class="trust-strip reveal-on-scroll" aria-label="Trust signals">
+        <article>
+          <p class="trust-title">Curated sneakers</p>
+          <p class="trust-copy">Every listing is hand-selected to keep quality high.</p>
+        </article>
+        <article>
+          <p class="trust-title">Direct WhatsApp support</p>
+          <p class="trust-copy">Buy via Agent Maks or Agent Denvo in a few taps.</p>
+        </article>
+        <article>
+          <p class="trust-title">Quick response</p>
+          <p class="trust-copy">Fast replies and transparent availability updates.</p>
+        </article>
+        <article>
+          <p class="trust-title">Sold pairs archive</p>
+          <p class="trust-copy">Proof of movement and buyer confidence.</p>
+        </article>
       </section>
     </main>
 
@@ -87,22 +108,21 @@
 
     <template id="cardSkeletonTemplate">
       <article class="card skeleton-card">
-        <div class="skeleton-img shimmer"></div>
+        <div class="skeleton-image shimmer"></div>
         <div class="card-content">
           <div class="skeleton-line shimmer"></div>
-          <div class="skeleton-line shimmer short"></div>
-          <div class="skeleton-line shimmer tiny"></div>
+          <div class="skeleton-line short shimmer"></div>
+          <div class="skeleton-line tiny shimmer"></div>
         </div>
       </article>
     </template>
 
     <script>
       window.__QADAM_CONFIG__ = {
-        // Optional runtime overrides for Vercel deployments
         // sheetUrl: "https://docs.google.com/spreadsheets/.../output=csv",
         // whatsappAgents: [
-        //   { label: "Message Agent A", phone: "971500000000" },
-        //   { label: "Message Agent B", phone: "971511111111" }
+        //   { label: "Buy via Agent Maks", phone: "923xxxxxxxxx" },
+        //   { label: "Buy via Agent Denvo", phone: "923xxxxxxxxx" }
         // ]
       };
     </script>

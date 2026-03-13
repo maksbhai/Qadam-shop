@@ -1,24 +1,30 @@
 const DEFAULT_SHEET_URL =
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vSZQbxfMT_V4_wHyjn4yOtGPxd4I392sODXGX3KQZFJ2ndSheNkFBrdm6wRdNqWAkYPGtSHMS0Lhp3U/pub?gid=0&single=true&output=csv";
 
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80";
+
 const runtimeConfig = window.__QADAM_CONFIG__ || {};
 const SHEET_URL = runtimeConfig.sheetUrl || DEFAULT_SHEET_URL;
-
 const WHATSAPP_AGENTS = (runtimeConfig.whatsappAgents || [
-  { label: "Message Agent A", phone: "923398619007" },
-  { label: "Message Agent B", phone: "923398968007" },
+  { label: "Buy via Agent Maks", phone: "923398619007" },
+  { label: "Buy via Agent Denvo", phone: "923398968007" },
 ]).filter((agent) => agent?.phone && agent?.label);
 
-const STATUS_MAP = {
-  "": "Available",
-  pending: "Reserved",
-  Sold: "Sold",
+const STATUS = {
+  AVAILABLE: "Available",
+  RESERVED: "Reserved",
+  SOLD: "Sold",
 };
 
 const dom = {
+  heroFeature: document.getElementById("heroFeature"),
   featuredRail: document.getElementById("featuredRail"),
   searchInput: document.getElementById("searchInput"),
-  chipBar: document.getElementById("chipBar"),
+  statusChips: document.getElementById("statusChips"),
+  sizeFilter: document.getElementById("sizeFilter"),
+  conditionFilter: document.getElementById("conditionFilter"),
+  sortBy: document.getElementById("sortBy"),
   availableGrid: document.getElementById("availableGrid"),
   archiveGrid: document.getElementById("archiveGrid"),
   availableCount: document.getElementById("availableCount"),
@@ -28,20 +34,28 @@ const dom = {
   cardSkeletonTemplate: document.getElementById("cardSkeletonTemplate"),
 };
 
-let inventory = [];
-let activeFilter = "all";
+const state = {
+  inventory: [],
+  statusFilter: "all",
+  sizeFilter: "all",
+  conditionFilter: "all",
+  sortBy: "latest",
+  query: "",
+};
 
 init();
 
 async function init() {
   renderSkeletons();
-  renderChips();
+  renderStaticControls();
+  setupEvents();
 
   try {
     const csvText = await fetchSheetCsv(SHEET_URL);
-    inventory = mapRows(parseCSV(csvText));
+    state.inventory = mapRows(parseCSV(csvText));
+    hydrateFilterOptions();
     renderAll();
-    setupEvents();
+    setupScrollReveal();
   } catch (error) {
     renderError(error);
   }
@@ -103,7 +117,6 @@ function parseCSV(raw) {
 
 function mapRows(rows) {
   if (!rows.length) return [];
-
   const headers = rows[0].map((header) => normalize(header));
   const idx = {
     name: headers.indexOf("productname"),
@@ -115,40 +128,115 @@ function mapRows(rows) {
     paymentStatus: headers.indexOf("paymentstatus"),
   };
 
-  return rows.slice(1).map((columns, id) => {
-    const paymentRaw = (columns[idx.paymentStatus] || "").toLowerCase();
-    const paymentStatus = STATUS_MAP[paymentRaw] || "Available";
+  return rows
+    .slice(1)
+    .map((columns, id) => {
+      const name = cleanCell(columns[idx.name]) || "Unnamed sneaker";
+      const imageUrl = cleanCell(columns[idx.image]) || FALLBACK_IMAGE;
+      const size = cleanCell(columns[idx.size]) || "Size not listed";
+      const condition = cleanCell(columns[idx.condition]) || "Condition not listed";
+      const description = cleanCell(columns[idx.description]);
+      const paymentStatus = normalizePaymentStatus(cleanCell(columns[idx.paymentStatus]));
+      const publicPrice = normalizePrice(cleanCell(columns[idx.price]));
 
-    return {
-      id,
-      name: safe(columns[idx.name], "Unnamed Pair"),
-      imageUrl: safe(columns[idx.image], "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=1200&q=80"),
-      size: safe(columns[idx.size], "N/A"),
-      condition: safe(columns[idx.condition], "Not specified"),
-      description: safe(columns[idx.description], "No public description available yet."),
-      publicPrice: safe(columns[idx.price], "Price on request"),
-      paymentStatus,
-      searchableText: `${columns[idx.name] || ""} ${columns[idx.condition] || ""} ${columns[idx.size] || ""}`.toLowerCase(),
-    };
-  });
+      return {
+        id,
+        name,
+        imageUrl,
+        size,
+        condition,
+        description,
+        publicPrice,
+        paymentStatus,
+        searchableText: `${name} ${size} ${condition}`.toLowerCase(),
+        createdAt: rows.length - id,
+      };
+    })
+    .filter((item) => item.name);
 }
 
-function safe(value, fallback) {
-  return (value || "").trim() || fallback;
+function normalizePaymentStatus(rawStatus) {
+  const normalized = (rawStatus || "").trim().toLowerCase();
+  if (!normalized) return STATUS.AVAILABLE;
+  if (normalized === "pending") return STATUS.RESERVED;
+  if (normalized === "sold" || normalized === "complete") return STATUS.SOLD;
+  return STATUS.AVAILABLE;
+}
+
+function normalizePrice(value) {
+  const raw = (value || "").trim();
+  if (!raw) return "DM for price";
+  const digits = raw.replace(/[^\d]/g, "");
+  if (!digits) return raw;
+  const formatted = Number(digits).toLocaleString("en-PK");
+  return `Rs ${formatted}`;
+}
+
+function cleanCell(value) {
+  return (value || "").replace(/\s+/g, " ").trim();
 }
 
 function normalize(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function renderStaticControls() {
+  renderStatusChips();
+  dom.sortBy.innerHTML = [
+    ["latest", "Sort: Latest"],
+    ["price-asc", "Price: Low to High"],
+    ["price-desc", "Price: High to Low"],
+  ]
+    .map(([value, label]) => `<option value="${value}">${label}</option>`)
+    .join("");
+}
+
+function hydrateFilterOptions() {
+  const sizes = uniqueValues(state.inventory.map((item) => item.size));
+  const conditions = uniqueValues(state.inventory.map((item) => item.condition));
+
+  dom.sizeFilter.innerHTML = buildSelectOptions("All sizes", sizes);
+  dom.conditionFilter.innerHTML = buildSelectOptions("All conditions", conditions);
+}
+
+function buildSelectOptions(baseLabel, values) {
+  return [`<option value="all">${baseLabel}</option>`]
+    .concat(values.map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`))
+    .join("");
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
 }
 
 function setupEvents() {
-  dom.searchInput.addEventListener("input", renderAll);
+  dom.searchInput.addEventListener("input", (event) => {
+    state.query = event.target.value.trim().toLowerCase();
+    renderAll();
+  });
 
-  dom.chipBar.addEventListener("click", (event) => {
+  dom.statusChips.addEventListener("click", (event) => {
     const chip = event.target.closest("button[data-filter]");
     if (!chip) return;
-    activeFilter = chip.dataset.filter;
-    renderChips();
+    state.statusFilter = chip.dataset.filter;
+    renderStatusChips();
+    renderAll();
+  });
+
+  dom.sizeFilter.addEventListener("change", (event) => {
+    state.sizeFilter = event.target.value;
+    renderAll();
+  });
+
+  dom.conditionFilter.addEventListener("change", (event) => {
+    state.conditionFilter = event.target.value;
+    renderAll();
+  });
+
+  dom.sortBy.addEventListener("change", (event) => {
+    state.sortBy = event.target.value;
     renderAll();
   });
 
@@ -161,47 +249,113 @@ function setupEvents() {
   });
 }
 
+function renderStatusChips() {
+  const chips = [
+    ["all", "All"],
+    ["available", "Available"],
+    ["reserved", "Reserved"],
+    ["sold", "Sold"],
+  ];
+
+  dom.statusChips.innerHTML = chips
+    .map(
+      ([key, label]) =>
+        `<button class="chip ${state.statusFilter === key ? "active" : ""}" data-filter="${key}" type="button">${label}</button>`,
+    )
+    .join("");
+}
+
 function renderAll() {
-  const query = dom.searchInput.value.trim().toLowerCase();
-  const filtered = inventory.filter((item) => {
-    const matchesQuery = !query || item.searchableText.includes(query);
-    const matchesFilter = activeFilter === "all" || item.paymentStatus.toLowerCase() === activeFilter;
-    return matchesQuery && matchesFilter;
-  });
+  const filtered = applyFilters(state.inventory);
+  const available = filtered.filter((item) => item.paymentStatus === STATUS.AVAILABLE);
+  const archived = filtered.filter((item) => item.paymentStatus !== STATUS.AVAILABLE);
 
-  const available = filtered.filter((item) => item.paymentStatus === "Available");
-  const archived = filtered.filter((item) => item.paymentStatus !== "Available");
+  renderHeroFeature(available[0]);
+  renderFeatured(available.slice(0, 8));
+  renderGrid(dom.availableGrid, available, "No available sneakers match your filters.");
+  renderGrid(dom.archiveGrid, archived, "No reserved or sold sneakers match your filters.", true);
 
-  renderFeatured(inventory.filter((item) => item.paymentStatus === "Available").slice(0, 6));
-  renderGrid(dom.availableGrid, available, "No available pairs match your current search/filter.");
-  renderGrid(dom.archiveGrid, archived, "No reserved or sold pairs match your current search/filter.");
+  dom.availableCount.textContent = `${available.length} live pair${available.length === 1 ? "" : "s"}`;
+  dom.archiveCount.textContent = `${archived.length} archived pair${archived.length === 1 ? "" : "s"}`;
+}
 
-  dom.availableCount.textContent = `${available.length} live item${available.length === 1 ? "" : "s"}`;
-  dom.archiveCount.textContent = `${archived.length} archived item${archived.length === 1 ? "" : "s"}`;
+function applyFilters(items) {
+  return sortProducts(
+    items.filter((item) => {
+      const matchesQuery = !state.query || item.searchableText.includes(state.query);
+      const statusKey = item.paymentStatus.toLowerCase();
+      const matchesStatus = state.statusFilter === "all" || state.statusFilter === statusKey;
+      const matchesSize = state.sizeFilter === "all" || state.sizeFilter === item.size;
+      const matchesCondition = state.conditionFilter === "all" || state.conditionFilter === item.condition;
+      return matchesQuery && matchesStatus && matchesSize && matchesCondition;
+    }),
+  );
+}
+
+function sortProducts(items) {
+  const sorted = [...items];
+  if (state.sortBy === "price-asc") {
+    sorted.sort((a, b) => getPriceNumber(a.publicPrice) - getPriceNumber(b.publicPrice));
+  } else if (state.sortBy === "price-desc") {
+    sorted.sort((a, b) => getPriceNumber(b.publicPrice) - getPriceNumber(a.publicPrice));
+  } else {
+    sorted.sort((a, b) => b.createdAt - a.createdAt);
+  }
+  return sorted;
+}
+
+function getPriceNumber(publicPrice) {
+  const digits = String(publicPrice || "").replace(/[^\d]/g, "");
+  return digits ? Number(digits) : Number.POSITIVE_INFINITY;
+}
+
+function renderHeroFeature(item) {
+  if (!item) {
+    dom.heroFeature.innerHTML = '<p class="empty-state">Fresh drops landing soon.</p>';
+    return;
+  }
+
+  dom.heroFeature.innerHTML = `
+    <article class="hero-card" data-open-id="${item.id}">
+      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />
+      <div>
+        <p class="mini-label">Featured Pair</p>
+        <h3>${escapeHtml(item.name)}</h3>
+        <p>${escapeHtml(item.publicPrice)} · ${escapeHtml(item.size)}</p>
+      </div>
+    </article>
+  `;
+
+  dom.heroFeature.querySelector("[data-open-id]")?.addEventListener("click", () => openPanel(item.id));
 }
 
 function renderFeatured(items) {
   if (!items.length) {
-    dom.featuredRail.innerHTML = '<p class="empty-state">No featured pairs available currently.</p>';
+    dom.featuredRail.innerHTML = '<p class="empty-state">No featured pairs available right now.</p>';
     return;
   }
 
   dom.featuredRail.innerHTML = items
     .map(
-      (item) => `
-      <article class="featured-tile" role="listitem">
+      (item, index) => `
+      <article class="featured-tile" role="listitem" data-open-id="${item.id}" style="animation-delay:${index * 50}ms">
         <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />
         <div>
           <h3>${escapeHtml(item.name)}</h3>
-          <p>${escapeHtml(item.publicPrice)} · EU ${escapeHtml(item.size)}</p>
+          <p>${escapeHtml(item.publicPrice)}</p>
+          <span>${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</span>
         </div>
       </article>
     `,
     )
     .join("");
+
+  dom.featuredRail.querySelectorAll("[data-open-id]").forEach((node) => {
+    node.addEventListener("click", () => openPanel(Number(node.dataset.openId)));
+  });
 }
 
-function renderGrid(target, items, emptyMessage) {
+function renderGrid(target, items, emptyMessage, archived = false) {
   if (!items.length) {
     target.innerHTML = `<p class="empty-state">${emptyMessage}</p>`;
     return;
@@ -210,15 +364,15 @@ function renderGrid(target, items, emptyMessage) {
   target.innerHTML = items
     .map(
       (item, index) => `
-      <article class="card" style="animation-delay:${index * 35}ms">
+      <article class="card card--${item.paymentStatus.toLowerCase()} ${archived ? "card--archive" : ""}" style="animation-delay:${index * 45}ms">
         <button type="button" data-open-id="${item.id}" aria-label="Open ${escapeHtml(item.name)} details">
           <div class="card-image-wrap">
-            <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80'" />
+            <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.src='${FALLBACK_IMAGE}'" />
             <span class="badge ${item.paymentStatus.toLowerCase()}">${item.paymentStatus}</span>
           </div>
           <div class="card-content">
             <p class="card-title">${escapeHtml(item.name)}</p>
-            <p class="card-meta">Size ${escapeHtml(item.size)} · ${escapeHtml(item.condition)}</p>
+            <p class="card-meta">${escapeHtml(item.size)} · ${escapeHtml(item.condition)}</p>
             <p class="card-price">${escapeHtml(item.publicPrice)}</p>
           </div>
         </button>
@@ -232,53 +386,57 @@ function renderGrid(target, items, emptyMessage) {
   });
 }
 
-function renderChips() {
-  const chips = [
-    { key: "all", label: "All" },
-    { key: "available", label: "Available" },
-    { key: "reserved", label: "Reserved" },
-    { key: "sold", label: "Sold" },
-  ];
-
-  dom.chipBar.innerHTML = chips
-    .map(
-      ({ key, label }) =>
-        `<button type="button" class="chip ${activeFilter === key ? "active" : ""}" data-filter="${key}">${label}</button>`,
-    )
-    .join("");
-}
-
 function openPanel(id) {
-  const item = inventory.find((entry) => entry.id === id);
+  const item = state.inventory.find((entry) => entry.id === id);
   if (!item) return;
 
-  const message = encodeURIComponent(
-    `Hi, I'm interested in this pair:\n${item.name}\nSize: ${item.size}\nCondition: ${item.condition}\nPrice: ${item.publicPrice}`,
-  );
+  dom.modalBackdrop.hidden = false;
+  dom.productPanel.innerHTML = renderModalSkeleton();
 
-  dom.productPanel.innerHTML = `
-    <button type="button" class="close-btn" aria-label="Close details">✕</button>
-    <img class="detail-media" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" onerror="this.src='https://images.unsplash.com/photo-1514996937319-344454492b37?auto=format&fit=crop&w=1200&q=80'" />
+  requestAnimationFrame(() => {
+    const message = encodeURIComponent(
+      `Hi, I want this sneaker:\nProduct: ${item.name}\nSize: ${item.size}\nCondition: ${item.condition}\nPrice: ${item.publicPrice}`,
+    );
+
+    dom.productPanel.innerHTML = `
+      <button type="button" class="close-btn" aria-label="Close details">✕</button>
+      <img class="detail-media" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" onerror="this.src='${FALLBACK_IMAGE}'" />
+      <div class="detail-body">
+        <span class="badge ${item.paymentStatus.toLowerCase()}">${item.paymentStatus}</span>
+        <h3>${escapeHtml(item.name)}</h3>
+        <div class="detail-pills">
+          <span class="detail-pill">${escapeHtml(item.size)}</span>
+          <span class="detail-pill">${escapeHtml(item.condition)}</span>
+          <span class="detail-pill">${escapeHtml(item.publicPrice)}</span>
+        </div>
+        ${item.description ? `<p class="detail-description">${escapeHtml(item.description)}</p>` : ""}
+        <div class="whatsapp-row">
+          ${renderWhatsappButtons(message)}
+        </div>
+      </div>
+    `;
+
+    dom.productPanel.querySelector(".close-btn")?.addEventListener("click", closePanel);
+  });
+}
+
+function renderModalSkeleton() {
+  return `
+    <div class="modal-skeleton shimmer"></div>
     <div class="detail-body">
-      <h3>${escapeHtml(item.name)}</h3>
-      <div class="detail-pills">
-        <span class="detail-pill">Status: ${item.paymentStatus}</span>
-        <span class="detail-pill">Size: ${escapeHtml(item.size)}</span>
-        <span class="detail-pill">Condition: ${escapeHtml(item.condition)}</span>
-      </div>
-      <p class="card-price">${escapeHtml(item.publicPrice)}</p>
-      <p class="detail-description">${escapeHtml(item.description)}</p>
-      <div class="whatsapp-row">
-        ${WHATSAPP_AGENTS.map(
-          (agent, idx) =>
-            `<a class="cta ${idx === 0 ? "primary" : "secondary"}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${agent.phone}?text=${message}">${agent.label}</a>`,
-        ).join("")}
-      </div>
+      <div class="skeleton-line shimmer"></div>
+      <div class="skeleton-line short shimmer"></div>
+      <div class="skeleton-line tiny shimmer"></div>
     </div>
   `;
+}
 
-  dom.modalBackdrop.hidden = false;
-  dom.productPanel.querySelector(".close-btn")?.addEventListener("click", closePanel);
+function renderWhatsappButtons(message) {
+  if (!WHATSAPP_AGENTS.length) return '<p class="empty-state">WhatsApp agents are not configured.</p>';
+  return WHATSAPP_AGENTS.map(
+    (agent, idx) =>
+      `<a class="cta ${idx === 0 ? "primary" : "secondary"}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${agent.phone}?text=${message}">${escapeHtml(agent.label)}</a>`,
+  ).join("");
 }
 
 function closePanel() {
@@ -287,26 +445,30 @@ function closePanel() {
 
 function renderSkeletons() {
   const skeleton = dom.cardSkeletonTemplate.innerHTML;
-  dom.availableGrid.innerHTML = Array.from({ length: 8 }, () => skeleton).join("");
+  dom.availableGrid.innerHTML = Array.from({ length: 6 }, () => skeleton).join("");
   dom.archiveGrid.innerHTML = Array.from({ length: 4 }, () => skeleton).join("");
+  dom.featuredRail.innerHTML = Array.from({ length: 2 }, () => skeleton).join("");
 }
 
 function renderError(error) {
-  const text = escapeHtml(error.message || "Failed to load inventory.");
-  dom.availableGrid.innerHTML = `<p class="empty-state">${text}. Please try again later.</p>`;
+  const text = escapeHtml(error.message || "Failed to load inventory");
+  dom.availableGrid.innerHTML = `<p class="empty-state">${text}. Please refresh and try again.</p>`;
   dom.archiveGrid.innerHTML = "";
   dom.featuredRail.innerHTML = "";
+  dom.heroFeature.innerHTML = `<p class="empty-state">Inventory feed is temporarily unavailable.</p>`;
 }
 
-function renderWhatsappButtons(message) {
-  if (!WHATSAPP_AGENTS.length) {
-    return `<p class="empty-state">WhatsApp agents are not configured yet.</p>`;
-  }
+function setupScrollReveal() {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) entry.target.classList.add("is-visible");
+      });
+    },
+    { threshold: 0.1 },
+  );
 
-  return WHATSAPP_AGENTS.map(
-    (agent, idx) =>
-      `<a class="cta ${idx === 0 ? "primary" : "secondary"}" target="_blank" rel="noopener noreferrer" href="https://wa.me/${agent.phone}?text=${message}">${escapeHtml(agent.label)}</a>`,
-  ).join("");
+  document.querySelectorAll(".reveal-on-scroll").forEach((node) => observer.observe(node));
 }
 
 function escapeHtml(value) {
