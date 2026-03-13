@@ -49,13 +49,13 @@ async function init() {
   renderSkeletons();
   renderStaticControls();
   setupEvents();
+  setupScrollReveal();
 
   try {
     const csvText = await fetchSheetCsv(SHEET_URL);
     state.inventory = mapRows(parseCSV(csvText));
     hydrateFilterOptions();
     renderAll();
-    setupScrollReveal();
   } catch (error) {
     renderError(error);
   }
@@ -459,6 +459,14 @@ function renderError(error) {
 }
 
 function setupScrollReveal() {
+  const revealNodes = document.querySelectorAll(".reveal-on-scroll");
+  if (!revealNodes.length) return;
+
+  if (typeof IntersectionObserver !== "function") {
+    revealNodes.forEach((node) => node.classList.add("is-visible"));
+    return;
+  }
+
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -468,7 +476,7 @@ function setupScrollReveal() {
     { threshold: 0.1 },
   );
 
-  document.querySelectorAll(".reveal-on-scroll").forEach((node) => observer.observe(node));
+  revealNodes.forEach((node) => observer.observe(node));
 }
 
 function escapeHtml(value) {
