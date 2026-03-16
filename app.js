@@ -316,14 +316,26 @@ function renderHeroFeature(item) {
   }
 
   dom.heroFeature.innerHTML = `
-    <article class="hero-card" data-open-id="${item.id}">
-      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="lazy" />
-      <div>
+    <div class="hero-spotlight">
+      <div class="hero-halo" aria-hidden="true"></div>
+      <div class="hero-halo-ring" aria-hidden="true"></div>
+      <div class="hero-fog" aria-hidden="true"></div>
+      <div class="hero-particles" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="hero-sneaker-wrap">
+        <div class="hero-shoe-plate" aria-hidden="true"></div>
+        <div class="hero-shoe-shadow" aria-hidden="true"></div>
+        <img class="hero-sneaker" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="eager" onerror="this.src='${FALLBACK_IMAGE}'" />
+        <div class="hero-sneaker-shine" aria-hidden="true"></div>
+      </div>
+      <article class="hero-feature-card" data-open-id="${item.id}">
         <p class="mini-label">Featured Pair</p>
         <h3>${escapeHtml(item.name)}</h3>
-        <p>${escapeHtml(item.publicPrice)} · ${escapeHtml(item.size)}</p>
-      </div>
-    </article>
+        <p class="hero-feature-meta">${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</p>
+        <p class="hero-feature-price">${escapeHtml(item.publicPrice)}</p>
+      </article>
+    </div>
   `;
 
   dom.heroFeature.querySelector("[data-open-id]")?.addEventListener("click", () => openPanel(item.id));
