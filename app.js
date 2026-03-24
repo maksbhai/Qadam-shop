@@ -316,63 +316,45 @@ function renderHeroFeature(item) {
   }
 
   dom.heroFeature.innerHTML = `
-    <div class="hero-spotlight">
-      <div class="hero-liquid-orb hero-liquid-orb--one" aria-hidden="true"></div>
-      <div class="hero-liquid-orb hero-liquid-orb--two" aria-hidden="true"></div>
-      <article class="hero-glass-panel">
-        <p class="mini-label">qAdam thrift by denvo</p>
-        <h3>Jordan Sneaker 3D Experience</h3>
-        <p class="hero-feature-meta">Real embedded Air Jordan 3D model with smooth hover motion and glow loops.</p>
-        <p class="hero-feature-price">${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</p>
-        <div class="hero-material-links">
-          <a href="https://sketchfab.com/3d-models/nike-air-jordan-fd462c530d974f33a523d88a7562f1cf" target="_blank" rel="noreferrer">3D Model Source</a>
-          <a href="#available-title">Shop Similar Jordans</a>
-        </div>
-      </article>
-      <div class="hero-spline-shell" aria-label="Interactive Jordan sneaker concept">
-        <span class="hero-floating-tag hero-floating-tag--one">3D Spin</span>
-        <span class="hero-floating-tag hero-floating-tag--two">Hover Reactive</span>
-        <span class="hero-floating-tag hero-floating-tag--three">Jordan Energy</span>
-        <div class="hero-model-glow" aria-hidden="true"></div>
-        <iframe
-          title="Nike Air Jordan 3D model"
-          src="https://sketchfab.com/models/fd462c530d974f33a523d88a7562f1cf/embed?autostart=1&preload=1&ui_theme=dark&dnt=1"
-          allow="autoplay; fullscreen; xr-spatial-tracking"
-          allowfullscreen
-        ></iframe>
-      </div>
-      <button type="button" class="hero-feature-card" data-open-id="${item.id}">
-        <p class="mini-label">Featured Pair</p>
-        <h3>${escapeHtml(item.name)}</h3>
-        <p class="hero-feature-meta">${escapeHtml(item.publicPrice)}</p>
+    <div class="hero-quantum-stage" aria-label="3D sneaker animation showcase">
+      <div class="hero-grid-overlay" aria-hidden="true"></div>
+      <div class="hero-light-trail hero-light-trail--one" aria-hidden="true"></div>
+      <div class="hero-light-trail hero-light-trail--two" aria-hidden="true"></div>
+      <button type="button" class="hero-shoe-wrap" data-open-id="${item.id}" aria-label="Open ${escapeHtml(item.name)} details">
+        <div class="hero-shoe-glow" aria-hidden="true"></div>
+        <img
+          class="hero-shoe-image"
+          src="${escapeHtml(item.imageUrl)}"
+          alt="${escapeHtml(item.name)}"
+          loading="eager"
+          onerror="this.src='${FALLBACK_IMAGE}'"
+        />
       </button>
     </div>
   `;
 
-  dom.heroFeature.querySelector("[data-open-id]")?.addEventListener("click", () => openPanel(item.id));
+  dom.heroFeature.querySelectorAll("[data-open-id]").forEach((node) => {
+    node.addEventListener("click", () => openPanel(item.id));
+  });
   setupHeroModelMotion();
 }
 
 function setupHeroModelMotion() {
-  const spotlight = dom.heroFeature.querySelector(".hero-spotlight");
-  const modelShell = dom.heroFeature.querySelector(".hero-spline-shell");
-  if (!spotlight || !modelShell) return;
+  const stage = dom.heroFeature.querySelector(".hero-quantum-stage");
+  const shoeWrap = dom.heroFeature.querySelector(".hero-shoe-wrap");
+  if (!stage || !shoeWrap) return;
 
-  spotlight.addEventListener("pointermove", (event) => {
-    const bounds = spotlight.getBoundingClientRect();
+  stage.addEventListener("pointermove", (event) => {
+    const bounds = stage.getBoundingClientRect();
     const x = (event.clientX - bounds.left) / bounds.width - 0.5;
     const y = (event.clientY - bounds.top) / bounds.height - 0.5;
-    modelShell.style.setProperty("--hero-tilt-x", `${(y * -6).toFixed(2)}deg`);
-    modelShell.style.setProperty("--hero-tilt-y", `${(x * 8).toFixed(2)}deg`);
-    modelShell.style.setProperty("--hero-shine-x", `${50 + x * 28}%`);
-    modelShell.style.setProperty("--hero-shine-y", `${45 + y * 22}%`);
+    shoeWrap.style.setProperty("--hero-tilt-x", `${(y * -7).toFixed(2)}deg`);
+    shoeWrap.style.setProperty("--hero-tilt-y", `${(x * 10).toFixed(2)}deg`);
   });
 
-  spotlight.addEventListener("pointerleave", () => {
-    modelShell.style.removeProperty("--hero-tilt-x");
-    modelShell.style.removeProperty("--hero-tilt-y");
-    modelShell.style.removeProperty("--hero-shine-x");
-    modelShell.style.removeProperty("--hero-shine-y");
+  stage.addEventListener("pointerleave", () => {
+    shoeWrap.style.removeProperty("--hero-tilt-x");
+    shoeWrap.style.removeProperty("--hero-tilt-y");
   });
 }
 
