@@ -316,7 +316,7 @@ function renderHeroFeature(item) {
   }
 
   dom.heroFeature.innerHTML = `
-    <div class="hero-quantum-stage" aria-label="3D sneaker animation showcase">
+    <div class="hero-quantum-stage">
       <div class="hero-grid-overlay" aria-hidden="true"></div>
       <div class="hero-light-trail hero-light-trail--one" aria-hidden="true"></div>
       <div class="hero-light-trail hero-light-trail--two" aria-hidden="true"></div>
@@ -330,6 +330,14 @@ function renderHeroFeature(item) {
           onerror="this.src='${FALLBACK_IMAGE}'"
         />
       </button>
+      <article class="hero-cta-shell">
+        <p class="mini-label">Featured Pair</p>
+        <h3>${escapeHtml(item.name)}</h3>
+        <p class="hero-feature-meta">${escapeHtml(item.publicPrice)} · ${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</p>
+        <button type="button" class="hero-quantum-btn" data-open-id="${item.id}">
+          Shop the Quantum <span aria-hidden="true">→</span>
+        </button>
+      </article>
     </div>
   `;
 
