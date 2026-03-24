@@ -322,18 +322,24 @@ function renderHeroFeature(item) {
       <article class="hero-glass-panel">
         <p class="mini-label">qAdam thrift by denvo</p>
         <h3>Jordan Sneaker 3D Experience</h3>
-        <p class="hero-feature-meta">Interactive liquid-glass concept powered by Spline.</p>
+        <p class="hero-feature-meta">Real embedded Air Jordan 3D model with smooth hover motion and glow loops.</p>
         <p class="hero-feature-price">${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</p>
         <div class="hero-material-links">
-          <a href="https://spline.design/" target="_blank" rel="noreferrer">Spline Inso</a>
-          <a href="https://docs.spline.design/doc/materials/doc4CMn5Fd7W" target="_blank" rel="noreferrer">Spline Materials</a>
+          <a href="https://sketchfab.com/3d-models/nike-air-jordan-fd462c530d974f33a523d88a7562f1cf" target="_blank" rel="noreferrer">3D Model Source</a>
+          <a href="#available-title">Shop Similar Jordans</a>
         </div>
       </article>
       <div class="hero-spline-shell" aria-label="Interactive Jordan sneaker concept">
-        <spline-viewer
-          loading-anim-type="spinner-small-dark"
-          url="https://prod.spline.design/oL0Br6u5xJ1Xh932/scene.splinecode"
-        ></spline-viewer>
+        <span class="hero-floating-tag hero-floating-tag--one">3D Spin</span>
+        <span class="hero-floating-tag hero-floating-tag--two">Hover Reactive</span>
+        <span class="hero-floating-tag hero-floating-tag--three">Jordan Energy</span>
+        <div class="hero-model-glow" aria-hidden="true"></div>
+        <iframe
+          title="Nike Air Jordan 3D model"
+          src="https://sketchfab.com/models/fd462c530d974f33a523d88a7562f1cf/embed?autostart=1&preload=1&ui_theme=dark&dnt=1"
+          allow="autoplay; fullscreen; xr-spatial-tracking"
+          allowfullscreen
+        ></iframe>
       </div>
       <button type="button" class="hero-feature-card" data-open-id="${item.id}">
         <p class="mini-label">Featured Pair</p>
@@ -344,6 +350,30 @@ function renderHeroFeature(item) {
   `;
 
   dom.heroFeature.querySelector("[data-open-id]")?.addEventListener("click", () => openPanel(item.id));
+  setupHeroModelMotion();
+}
+
+function setupHeroModelMotion() {
+  const spotlight = dom.heroFeature.querySelector(".hero-spotlight");
+  const modelShell = dom.heroFeature.querySelector(".hero-spline-shell");
+  if (!spotlight || !modelShell) return;
+
+  spotlight.addEventListener("pointermove", (event) => {
+    const bounds = spotlight.getBoundingClientRect();
+    const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+    modelShell.style.setProperty("--hero-tilt-x", `${(y * -6).toFixed(2)}deg`);
+    modelShell.style.setProperty("--hero-tilt-y", `${(x * 8).toFixed(2)}deg`);
+    modelShell.style.setProperty("--hero-shine-x", `${50 + x * 28}%`);
+    modelShell.style.setProperty("--hero-shine-y", `${45 + y * 22}%`);
+  });
+
+  spotlight.addEventListener("pointerleave", () => {
+    modelShell.style.removeProperty("--hero-tilt-x");
+    modelShell.style.removeProperty("--hero-tilt-y");
+    modelShell.style.removeProperty("--hero-shine-x");
+    modelShell.style.removeProperty("--hero-shine-y");
+  });
 }
 
 function renderFeatured(items) {
