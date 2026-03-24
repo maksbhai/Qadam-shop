@@ -147,6 +147,14 @@ p { margin: 0; }
   animation: heroReveal 760ms cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
+.hero-content--minimal {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  max-width: none;
+  margin-bottom: 0.55rem;
+}
+
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.24em;
@@ -668,6 +676,7 @@ select {
   body { padding: 1.4rem 1.8rem 4rem; }
   .hero { padding: 1.45rem; }
   .hero-content { max-width: 620px; text-align: left; }
+  .hero-content--minimal { max-width: none; text-align: center; justify-content: center; }
   .hero-actions { grid-template-columns: auto auto; justify-content: start; }
   .hero-feature { margin-top: 1.7rem; }
   .hero-quantum-stage { min-height: clamp(360px, 42vw, 560px); }
