@@ -317,24 +317,29 @@ function renderHeroFeature(item) {
 
   dom.heroFeature.innerHTML = `
     <div class="hero-spotlight">
-      <div class="hero-halo" aria-hidden="true"></div>
-      <div class="hero-halo-ring" aria-hidden="true"></div>
-      <div class="hero-fog" aria-hidden="true"></div>
-      <div class="hero-particles" aria-hidden="true">
-        <span></span><span></span><span></span><span></span><span></span>
+      <div class="hero-liquid-orb hero-liquid-orb--one" aria-hidden="true"></div>
+      <div class="hero-liquid-orb hero-liquid-orb--two" aria-hidden="true"></div>
+      <article class="hero-glass-panel">
+        <p class="mini-label">qAdam thrift by denvo</p>
+        <h3>Jordan Sneaker 3D Experience</h3>
+        <p class="hero-feature-meta">Interactive liquid-glass concept powered by Spline.</p>
+        <p class="hero-feature-price">${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</p>
+        <div class="hero-material-links">
+          <a href="https://spline.design/" target="_blank" rel="noreferrer">Spline Inso</a>
+          <a href="https://docs.spline.design/doc/materials/doc4CMn5Fd7W" target="_blank" rel="noreferrer">Spline Materials</a>
+        </div>
+      </article>
+      <div class="hero-spline-shell" aria-label="Interactive Jordan sneaker concept">
+        <spline-viewer
+          loading-anim-type="spinner-small-dark"
+          url="https://prod.spline.design/oL0Br6u5xJ1Xh932/scene.splinecode"
+        ></spline-viewer>
       </div>
-      <div class="hero-sneaker-wrap">
-        <div class="hero-shoe-plate" aria-hidden="true"></div>
-        <div class="hero-shoe-shadow" aria-hidden="true"></div>
-        <img class="hero-sneaker" src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" loading="eager" onerror="this.src='${FALLBACK_IMAGE}'" />
-        <div class="hero-sneaker-shine" aria-hidden="true"></div>
-      </div>
-      <article class="hero-feature-card" data-open-id="${item.id}">
+      <button type="button" class="hero-feature-card" data-open-id="${item.id}">
         <p class="mini-label">Featured Pair</p>
         <h3>${escapeHtml(item.name)}</h3>
-        <p class="hero-feature-meta">${escapeHtml(item.condition)} · ${escapeHtml(item.size)}</p>
-        <p class="hero-feature-price">${escapeHtml(item.publicPrice)}</p>
-      </article>
+        <p class="hero-feature-meta">${escapeHtml(item.publicPrice)}</p>
+      </button>
     </div>
   `;
 
